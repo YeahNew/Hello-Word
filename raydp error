@@ -1,0 +1,61 @@
+    # ray.init(address='auto', _redis_password='5241590000000000')
+    timeAA = time.time()
+    #-------------------------------------------------------------------------------------------------------------------
+
+    Edage_data_PATH = args.full_graph_path
+    Node_data_PATH = args.full_graph_feat_path
+
+    ray.init()
+    # After initialize ray cluster, you can use the raydp api to get a spark session
+    app_name = args.app_name
+    num_executors = 3
+    cores_per_executor = args.per_executor_core
+    memory_per_executor = args.per_executor_mem
+    spark = raydp.init_spark(app_name,
+                             num_executors,
+                             cores_per_executor,
+                             memory_per_executor)
+
+    # # schema for Node_features_data
+    long_cols = list(range(0, 1))
+    float_cols = list(range(1, 1 + 14))
+    label_cols = list(range(1 + 14, 16))
+
+    long_fields = [('node_id') for i in long_cols]
+    float_fields = [('feat_%d') % i for i in float_cols]
+    label_fields = [('label') for i in label_cols]
+
+    schema1 = (long_fields +
+              float_fields +
+              label_fields)
+
+    schema2 = ["src_node_id","dst_node_id"]
+
+    # # Here we just use a subset of the training data
+    Node_features_data = spark.read.format("csv").option("header", "False") \
+        .option("inferSchema", "true") \
+        .load(Node_data_PATH) \
+        .toDF(*schema1) \
+
+
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+2021-08-24 16:51:50,192 INFO RayAppMaster$RayAppMasterEndpoint [dispatcher-event-loop-7]: Registering app RayDP with DGL for abfusion_v2(Hotel dataset)
+2021-08-24 16:51:50,196 INFO RayAppMaster$RayAppMasterEndpoint [dispatcher-event-loop-7]: Registered app RayDP with DGL for abfusion_v2(Hotel dataset) with ID app-20210824165150-0000
+Exception in thread "dispatcher-event-loop-7" java.lang.NoSuchMethodError: io.ray.api.call.ActorCreator.setJvmOptions(Ljava/lang/String;)Lio/ray/api/call/ActorCreator;
+	at org.apache.spark.raydp.RayExecutorUtils.createExecutorActor(RayExecutorUtils.java:45)
+	at org.apache.spark.deploy.raydp.RayAppMaster$RayAppMasterEndpoint.org$apache$spark$deploy$raydp$RayAppMaster$RayAppMasterEndpoint$$requestNewExecutor(RayAppMaster.scala:227)
+	at org.apache.spark.deploy.raydp.RayAppMaster$RayAppMasterEndpoint.$anonfun$schedule$1(RayAppMaster.scala:214)
+	at scala.collection.immutable.Range.foreach$mVc$sp(Range.scala:158)
+	at org.apache.spark.deploy.raydp.RayAppMaster$RayAppMasterEndpoint.org$apache$spark$deploy$raydp$RayAppMaster$RayAppMasterEndpoint$$schedule(RayAppMaster.scala:213)
+	at org.apache.spark.deploy.raydp.RayAppMaster$RayAppMasterEndpoint$$anonfun$receive$1.applyOrElse(RayAppMaster.scala:121)
+	at org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:115)
+	at org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:203)
+	at org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:100)
+	at org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:75)
+	at org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:41)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+21/08/24 16:52:45 WARN TaskSchedulerImpl: Initial job has not accepted any resources; check your cluster UI to ensure that workers are registered and have sufficient resources
+21/08/24 16:53:00 WARN TaskSchedulerImpl: Initial job has not accepted any resources; check your cluster UI to ensure that workers are registered and have sufficient resources
+21/08/24 16:53:15 WARN TaskSchedulerImpl: Initial job has not accepted any resources; check your cluster UI to ensure that workers are registered and have sufficient resources
