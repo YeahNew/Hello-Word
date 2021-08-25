@@ -1,0 +1,74 @@
+Connected to pydev debugger (build 201.8538.36)
+Using backend: pytorch
+Current Path: /home/yexin/workSpace/PyCharmWorks/HikVision/rayhik/rayABV2
+2021-08-25 17:09:30,123	INFO worker.py:641 -- Connecting to existing Ray cluster at address: 10.3.68.117:9999
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+2021-08-25 17:09:32,063 ERROR DefaultRayRuntimeFactory [Thread-2]: Failed to initialize ray runtime, with config {"ray":{"address":"10.3.68.117:9999","head-args":[],"job":{"code-search-path":"","id":"","jvm-options":[],"num-java-workers-per-process":1,"worker-env":{}},"logging":{"dir":"/tmp/ray/session_2021-08-25_17-09-05_973250_43058/logs","level":"INFO","max-backup-files":10,"max-file-size":"500MB","pattern":"%d{yyyy-MM-dd HH:mm:ss,SSS} %p %c{1} [%t]: %m%n"},"node-ip":"10.3.68.117","object-store":{"socket-name":"/tmp/ray/session_2021-08-25_17-09-05_973250_43058/sockets/plasma_store"},"raylet":{"config":{"num_workers_per_process_java":"1"},"node-manager-port":40525,"socket-name":"/tmp/ray/session_2021-08-25_17-09-05_973250_43058/sockets/raylet"},"redis":{"password":"5241590000000000"},"resources":"CPU:4","run-mode":"CLUSTER","session-dir":"/tmp/ray/session_2021-08-25_17-09-05_973250_43058"}}
+java.lang.RuntimeException: Failed to get address info. Output: {'object_store_address': '/tmp/ray/session_2021-08-25_17-09-05_973250_43058/sockets/plasma_store', 'raylet_socket_name': '/tmp/ray/session_2021-08-25_17-09-05_973250_43058/sockets/raylet', 'node_manager_port': 40525}
+	at io.ray.runtime.runner.RunManager.getAddressInfoAndFillConfig(RunManager.java:88)
+	at io.ray.runtime.RayNativeRuntime.start(RayNativeRuntime.java:79)
+	at io.ray.runtime.DefaultRayRuntimeFactory.createRayRuntime(DefaultRayRuntimeFactory.java:39)
+	at io.ray.api.Ray.init(Ray.java:39)
+	at io.ray.api.Ray.init(Ray.java:26)
+	at org.apache.spark.deploy.raydp.AppMasterJavaBridge.startUpAppMaster(AppMasterJavaBridge.scala:41)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.GatewayConnection.run(GatewayConnection.java:238)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: com.google.gson.JsonSyntaxException: com.google.gson.stream.MalformedJsonException: Use JsonReader.setLenient(true) to accept malformed JSON at line 1 column 3 path $
+	at com.google.gson.JsonParser.parse(JsonParser.java:65)
+	at com.google.gson.JsonParser.parse(JsonParser.java:45)
+	at io.ray.runtime.runner.RunManager.getAddressInfoAndFillConfig(RunManager.java:83)
+	... 16 more
+Caused by: com.google.gson.stream.MalformedJsonException: Use JsonReader.setLenient(true) to accept malformed JSON at line 1 column 3 path $
+	at com.google.gson.stream.JsonReader.syntaxError(JsonReader.java:1568)
+	at com.google.gson.stream.JsonReader.checkLenient(JsonReader.java:1409)
+	at com.google.gson.stream.JsonReader.doPeek(JsonReader.java:542)
+	at com.google.gson.stream.JsonReader.peek(JsonReader.java:425)
+	at com.google.gson.JsonParser.parse(JsonParser.java:60)
+Traceback (most recent call last):
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/context.py", line 122, in init_spark
+    return _global_spark_context.get_or_create_session()
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/context.py", line 68, in get_or_create_session
+    spark_cluster = self._get_or_create_spark_cluster()
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/context.py", line 62, in _get_or_create_spark_cluster
+    self._spark_cluster = SparkCluster(self._configs)
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/spark/ray_cluster.py", line 33, in __init__
+    self._set_up_master(None, None)
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/spark/ray_cluster.py", line 39, in _set_up_master
+    self._app_master_bridge.start_up()
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/spark/ray_cluster_master.py", line 59, in start_up
+    self._create_app_master(extra_classpath)
+  File "/root/miniconda3/lib/python3.7/site-packages/raydp/spark/ray_cluster_master.py", line 169, in _create_app_master
+    self._app_master_java_bridge.startUpAppMaster(extra_classpath)
+  File "/root/miniconda3/lib/python3.7/site-packages/py4j/java_gateway.py", line 1305, in __call__
+    answer, self.gateway_client, self.target_id, self.name)
+  File "/root/miniconda3/lib/python3.7/site-packages/py4j/protocol.py", line 328, in get_return_value
+    format(target_id, ".", name), value)
+py4j.protocol.Py4JJavaError: An error occurred while calling o0.startUpAppMaster.
+: java.lang.RuntimeException: Failed to initialize Ray runtime.
+	at io.ray.api.Ray.init(Ray.java:28)
+	at org.apache.spark.deploy.raydp.AppMasterJavaBridge.startUpAppMaster(AppMasterJavaBridge.scala:41)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.GatewayConnection.run(GatewayConnection.java:238)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.RuntimeException: Failed to initialize ray runtime
+	at io.ray.runtime.DefaultRayRuntimeFactory.createRayRuntime(DefaultRayRuntimeFactory.java:43)
+	at io.ray.api.Ray.init(Ray.java:39)
+	at io.ray.api.Ray.init(Ray.java:26)
