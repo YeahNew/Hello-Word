@@ -1,0 +1,75 @@
+import numpy as np
+import pandas as pd
+
+import argparse
+import time
+
+import numpy as np
+import ray
+from scipy.stats import uniform
+import joblib
+from ray.util.joblib import register_ray
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.model_selection import RandomizedSearchCV
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='RayDP with DGL')
+    parser.add_argument('--app_name', type=str, default="RayDP with DGL for abfusion_v2(Hotel dataset)")
+    parser.add_argument('--ray_cluster_passwd', type=str, default='5241590000000000')
+
+    parser.add_argument(
+        "--address",
+        required=False,
+        type=str,
+        help="The address to use for ray")
+
+    args = parser.parse_args()
+
+ray.init(address='auto', _redis_password=args.ray_cluster_passwd)
+distributions = dict(C=uniform(loc=0, scale=6),penalty=['l2'])
+logistic = LogisticRegression(solver='saga', tol=1e-4, max_iter=2000,random_state=0)
+clf = RandomizedSearchCV(logistic, distributions, random_state=0,n_iter = 500,n_jobs=-1, verbose=10,cv=2)
+
+rows = 1174986
+X = np.random.randint(0,17,size=(rows,79))
+Y = np.random.randint(0,2,size=(rows,1))
+data = np.hstack([X,Y])
+datatmp = pd.DataFrame(data)
+ds = ray.data.from_pandas([ray.put(datatmp)]).repartition(500)
+
+# ds = ray.data.from_items(data).repartition(num_blocks=600)
+ObjectRef = ds.to_pandas()
+
+
+
+fit_time = time.time()
+register_ray()
+with joblib.parallel_backend('ray'):
+
+    clf.fit(np.vstack(ray.get(ObjectRef))[:,0:-1], np.vstack(ray.get(ObjectRef))[:,-1])  # ray cluster: 659.86 ss(rows = 1174986)
+    # clf.fit(ZZ,YY) #873s
+print("total-fit-time:{:.2f} s".format((time.time() - fit_time)))
+
+
+-------error----------
+Connected to pydev debugger (build 201.8538.36)
+2021-08-26 18:43:53,083	INFO worker.py:826 -- Connecting to existing Ray cluster at address: 10.3.68.117:9999
+Shuffle Map: 100%|████████████████████████████████| 1/1 [00:08<00:00,  8.05s/it]
+Shuffle Reduce: 100%|█████████████████████████| 500/500 [01:06<00:00,  7.47it/s]
+2021-08-26 18:47:00,789	WARNING pool.py:470 -- The 'context' argument is not supported using ray. Please refer to the documentation for how to control ray initialization.
+Fitting 2 folds for each of 500 candidates, totalling 1000 fits
+(pid=18375) [CV 1/2; 1/500] START C=3.2928810235639485, penalty=l2..........................
+(pid=18443) [CV 2/2; 4/500] START C=3.2692990979813814, penalty=l2..........................
+(pid=18219) [CV 1/2; 4/500] START C=3.2692990979813814, penalty=l2..........................
+(pid=18747) [CV 2/2; 5/500] START C=2.541928796033428, penalty=l2...........................
+(pid=18621) [CV 2/2; 7/500] START C=2.6255232675761553, penalty=l2..........................
+(pid=18333) [CV 1/2; 7/500] START C=2.6255232675761553, penalty=l2..........................
+(pid=18813) [CV 2/2; 10/500] START C=2.300649112954666, penalty=l2..........................
+(pid=18827) [CV 1/2; 8/500] START C=5.350638004692478, penalty=l2...........................
+(pid=18205) [CV 2/2; 169/500] START C=4.379943374544348, penalty=l2.........................
+(pid=18316) [CV 2/2; 118/500] START C=3.487637235815152, penalty=l2.........................
+(pid=18316) [CV 2/2; 134/500] START C=1.7896939557361846, penalty=l2........................
+(pid=18316) [CV 2/2; 164/500] START C=5.198293955571775, penalty=l2.........................
+
+Process finished with exit code 137
