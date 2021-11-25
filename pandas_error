@@ -1,0 +1,27 @@
+import numpy as np
+import pandas as pd
+import torch
+
+row = 700000
+col = 64
+val_numpy = np.random.rand(row, col)
+val_tensor = torch.randn(row, col)
+
+numpy_pd_start_time = time.time()
+va_numpy_pd = pd.DataFrame(val_numpy)
+numpy_pd_end_time = time.time()
+print("numpy to pd time:{:.4f}s".
+      format(numpy_pd_end_time - numpy_pd_start_time))
+
+tensor_numpy_pd_start_time = time.time()
+val_tensor_pd1 = pd.DataFrame(val_tensor.numpy())
+tensor_numpy_pd_end_time = time.time()
+print("tensor to numpy to pd time:{:.4f} s".
+      format(tensor_numpy_pd_end_time - tensor_numpy_pd_start_time))
+
+tensor_pd_start_time = time.time()
+val_tensor_pd2 = pd.DataFrame(val_tensor)
+tensor_pd_end_time = time.time()
+print("tensor to pd time:{:.4f} s".
+      format(tensor_pd_end_time - tensor_pd_start_time))
+	
