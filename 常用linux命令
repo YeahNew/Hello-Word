@@ -1,0 +1,230 @@
+海康各种开发包仓库：  http://af.hikvision.com.cn/artifactory/webapp/#/home
+
+GCC安装：
+../configure --enable-checking=release --enable-languages=c,c++ --disable-multilib --prefix=/home/yexin/softwares/gcc-7.3.0
+
+../configure --prefix=/home/yexin/softwares/gcc-7.3.0 --enable-checking=release --enable-languages=c,c++ --disable-multilib --with-gmp=/home/yexin/softwares/gmp-6.2.0 --with-mpfr=/home/yexin/softwares/mpfr-4.1.0 --with-mpc=/home/yexin/softwares/mpc-1.1.0
+
+查看CPU物理个数：
+
+cat /proc/cpuinfo | grep "physical id"
+查看每个物理CPU的核数
+cat /proc/cpuinfo | grep "core id" | sort | uniq | wc -l
+
+查看每个CPU核的超线程数：
+cat /proc/cpuinfo | grep "processor" | sort | uniq | wc -l
+
+##CPU利用率
+top -b -d 1 | grep --color=auto --color=auto 'top -' -A 5 > cpu_12_cores.log
+
+##网卡流量监控
+nload eno4 -m -u m > GPUTest_eno4_72_cores.log
+
+##ray启动head
+ray start --head --node-ip-address 10.3.68.117 --dashboard-port=8888 --dashboard-host 10.3.68.117 --port=9999
+##连接ray集群
+ray start --address='10.3.68.117:9999' --redis-password='5241590000000000'
+
+##停止ray
+ray stop --force
+
+##连接redis-server
+redis-cli -h 10.3.68.117 -p 6379 -a 5241590000000000
+
+##scala提交jar包
+scala -classspath XXX.jar org.hik.className
+
+
+
+
+##IO瓶颈监测
+iostat -x 1 > GPUTest_IO_12_cores.log
+iostat -x -m 1   ##输出读写单位为MB/s
+
+##hdfs删除文件
+hdfs dfs -rm -r /user/root/historyServerLog/*
+
+##hdfs查看文件大小或者备份容量
+hdfs dfs -du -h /user/root/benchmarks/data-10g/data/
+
+##上传文件
+hdfs dfs -put train_1mBack.txt /user/root/data/
+
+##hdfs设置文件备份：将customer备份设置为3
+hdfs dfs -setrep -R 3 /user/root/benchmarks/data-10g/data/customer
+----------------------------
+36.1 M   108.4 M  /user/root/benchmarks/data-10g/data/customer
+14.6 M   14.6 M   /user/root/benchmarks/data-10g/data/customer_address
+74.2 M   74.2 M   /user/root/benchmarks/data-10g/data/customer_demographics
+14.7 M   14.7 M   /user/root/benchmarks/data-10g/data/date_dim
+151.5 K  151.5 K  /user/root/benchmarks/data-10g/data/household_demographics
+327      327      /user/root/benchmarks/data-10g/data/income_band
+-----------------------------
+##hdfs 
+hdfs dfs -mkdir -p /user/root/historyServerLog
+hdfs dfsadmin -safemode leave
+hdfs namenode -format
+
+##平衡数据文件
+hdfs balancer
+##平衡数据节点
+hdfs balancer -policy datanode -threshold 30 -include -f /tmp/hdfs-balancer.txt
+//注意：/tmp/hdfs-balancer.txt里写上想要执行平衡节点的hostname
+##跨节点拷贝
+scp -r hadoop-3.2 hikBigDataTestGpu2:/home/yexin/bigData/
+
+##清除缓存
+echo 1 > /proc/sys/vm/drop_caches; 
+echo 2 > /proc/sys/vm/drop_caches; 
+echo 3 > /proc/sys/vm/drop_caches
+
+##产生tpcx-bb数据集
+./bigBench runBenchmark -f 220 -m 6 -s 6 -j 5
+
+
+--------------------------------------
+CPU总核数 = 物理CPU个数 * 每颗物理CPU的核数
+总逻辑CPU数 = 物理CPU个数 * 每颗物理CPU的核数 * 超线程数
+--------------------------------------
+##查看物理CPU数目
+cat /proc/cpuinfo | grep "physical id"  
+##所有physical id都是0，可知有1个物理CPU;也用管道排序去重后直接输出物理cpu的个数；
+cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l
+
+lscpu
+
+##jps工具
+jps -m 输出传入main()方法的参数
+jps -l输出main类或者jar的权限名
+jps -v输出传入jvm的参数
+
+
+##编译so
+g++ -fPIC -D_REENTRANT -I/usr/local/lib/jdk1.8.0_162/include -I/usr/local/lib/jdk1.8.0_162/include/linux -c cumljni.cpp
+g++ -shared cumljni.o -o libcumljni.so
+
+javac -d . NativeCall.java
+javah org.hik.ml.NativeCall
+
+##编译时有外接的动态链接库时
+##有错误，在测时
+g++ -fPIC -D_REENTRANT -I/usr/local/lib/jdk1.8.0_162/include -I/usr/local/lib/jdk1.8.0_162/include/linux -c cumljni.cpp -L /home/yexin/bigData/Libs -lcuml++ -lcumlcomms -lrmm -o cumljin
+
+####编译
+g++ -fPIC -D_REENTRANT -I/usr/local/lib/jdk1.8.0_162/include -I/usr/local/lib/jdk1.8.0_162/include/linux -c cumljni.cpp -I ./include/ -L/home/yexin/bigData/Libs -lcuml++ -lcumlcomms -lrmm -lcuda
+g++ -shared cumljni.o -o libcumljni.so
+
+
+##cuda编译
+nvcc -D_REENTRANT -I/usr/local/lib/jdk1.8.0_162/include -I/usr/local/lib/jdk1.8.0_162/include/linux -c cumljni.cpp -I ./include/ -L/home/yexin/bigData/Libs -lcuml++ -lcumlcomms -lrmm -lcuda -Xcompiler -fPIC -o cumlgpu.o
+nvcc -shared cumlgpu.o -o libcumljnigpu.so
+
+##
+nvcc -D_REENTRANT -I/usr/local/lib/jdk1.8.0_162/include -I/usr/local/lib/jdk1.8.0_162/include/linux -c cumljni.cpp -I ./include/ -L/home/yexin/bigData/Libs -lcuml++ -lcumlcomms -lrmm -lcuda -Xcompiler -fPIC -shared libcumljnigpu.so
+
+##查看GPU的拓扑结构
+nvidia-smi topo -m
+
+##提交SVN项目注释
+[修改]调整了工程中的文件结构以及package的命名，将c++代码归类到native/src文件中，且增加了cpp文件编译时需要的include文件。
+
+
+###启动docker【176】
+docker run --network hik-net -it --rm -v /home/data/gnn_dataset/dgl:/usr/share/dgl --shm-size="100g" --gpus '"device=0,1"'  sage_dgl_torch bash 
+
+##查看so库的依赖
+ldd xx.so
+
+##nm  
+nm libcumljnigpu.so | grep _ZN2ML10cumlHandleC1Ev
+
+
+##启动ray集群
+ray start --head --node-ip-address 10.3.68.117 --dashboard-port=8888 --dashboard-host 10.3.68.117 --port=9999 --num-cpus=60
+
+在其他节点执行加入主节点
+ray start --address='10.3.68.117:9999' --redis-password='5241590000000000' --num-cpus=60
+
+##进入到github项目的分支
+先：git clone http://XXXX.git
+后：git checkout 分支名
+
+##docker 
+删除镜像： docker rm imageID
+查看镜像： docker images
+查看运行的镜像： docker container ls -a
+
+##redis
+启动redis server: redis-server --port 6380 --protected-mode no
+客户端连接： redis-cli -p 6380
+清除redis内存：flushall
+
+##查看某个目录下各个文件的大小
+du -h -d 1 /var/lib/docker/overlay2/
+或者：du -sh /public
+
+##查看某个hdfs路径下的文件大小
+hadoop fs -du -h /home/
+
+##root密码
+hikadmin12345+
+
+##实时监控网络并输出到txt
+nload eno4 -m -u m >> test.txt
+nload eno4 -t 1000 -m -u m >> test.txt  #1s输出一次
+
+#查看磁盘类型
+lsblk -d -o name,rota
+返回0：SSD盘
+返回1：SATA盘
+
+#查找文件
+find / -name 文件名
+
+find 路径 -name "文件名" -print0|xargs -0 ls -l
+
+find 路径 -name "*.txt" -print0|xargs -0 ls -l
+
+#找大文件
+#找大于10M的文件
+find 路径 -size +10M
+
+#找大于10M的文件，输出具体大小
+find 路径 -size +10M -print0|xargs -0 ls -l
+
+#查找某个文件或者文件夹【config】
+find 路径 -name config -type d    #查找config文件夹
+find 路径 -name config -type f    #查找config文件
+
+#查找30min类修改的文件
+find 路径 -cmin -30
+#查找1天内修改的文件
+find 路径 -ctime -1
+find 路径 -mtime -1  #修改权限的不会显示，只显示修改内容的文件
+
+#查找一定路径深度的文件
+find 路径 -maxdepth 3 -name "*.txt"
+
+#查找文件中某个字符所在行和行号
+grep -n "aa" "abc.txt"
+grep -rn "aa" *  #所有文件
+grep -rn "aa" *.txt
+
+#输出"aa"上下内容
+grep -n "aa"  -A 2 -B 3 abc.txt
+
+#显示文件内容
+cat  -n abc.txt
+more abc.txt   #空格进入到下一页，Enter进入到下一行，B 上一页， Q退出
+more -3 abc.txt
+more +10 abc.txt #第10行开始查看
+
+head -n 5 abc.txt
+tail -n 4 abc.txt
+tail -f abc.txt  #持续监听文件内容，并输出
+
+#显示当前路径下文件大小
+du -sh *
+
+
+
