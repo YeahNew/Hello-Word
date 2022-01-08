@@ -1,5 +1,3 @@
-海康各种开发包仓库：  http://af.hikvision.com.cn/artifactory/webapp/#/home
-
 GCC安装：
 ../configure --enable-checking=release --enable-languages=c,c++ --disable-multilib --prefix=/home/yexin/softwares/gcc-7.3.0
 
